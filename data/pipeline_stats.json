@@ -1,0 +1,15 @@
+{
+  "api_records": 500,
+  "kafka_published": 500,
+  "kafka_failed": 0,
+  "kafka_consumed": 500,
+  "kafka_bad_messages": 0,
+  "records_valid": 500,
+  "records_invalid": 0,
+  "test_records_total": 3,
+  "test_records_detected": 3,
+  "duplicates_removed": 0,
+  "records_after_cleaning": 500,
+  "records_stored_db": 500,
+  "second_load_inserted": 0
+}
