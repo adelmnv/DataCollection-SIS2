@@ -3,8 +3,7 @@ import sys
 import pandas as pd
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
-from config import (KAFKA_SERVER, KAFKA_TOPIC, KAFKA_GROUP,
-                    CONSUMER_TIMEOUT_MS, CONSUMED_FILE)
+from config import (KAFKA_SERVER, KAFKA_TOPIC, KAFKA_GROUP, CONSUMER_TIMEOUT_MS, CONSUMED_FILE)
 from stats import save_stat
 
 

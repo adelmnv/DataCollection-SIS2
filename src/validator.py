@@ -3,7 +3,7 @@ import pandas as pd
 import pandera.pandas as pa
 from pandera.errors import SchemaErrors
 from config import (CONSUMED_FILE, VALID_FILE, INVALID_FILE,
-                    ERRORS_FILE, TEST_ERRORS_FILE)
+                    ERRORS_FILE)
 from stats import save_stat
 
 MAG_TYPES = ["mb", "mb_lg", "md", "mh", "ml", "mlg", "ms", "ms_20", "mw", "mwb",
@@ -13,9 +13,8 @@ ALERT_TYPES = ["green", "yellow", "orange", "red"]
 
 schema = pa.DataFrameSchema(
     {
-        "id": pa.Column(str, nullable=False, unique=True, report_duplicates="exclude_first"),
-        "time": pa.Column(pa.DateTime, nullable=False, coerce=True,
-                          checks=pa.Check.in_range(pd.Timestamp("2000-01-01"), pd.Timestamp.now())),
+        "id": pa.Column(str, nullable=False, unique=True),
+        "time": pa.Column(pa.DateTime, nullable=False, coerce=True, checks=pa.Check.in_range(pd.Timestamp("2000-01-01"), pd.Timestamp.now())),
         "mag": pa.Column(float, nullable=False, coerce=True, checks=pa.Check.in_range(-2, 10)),
         "magType": pa.Column(str, nullable=True, checks=pa.Check.isin(MAG_TYPES)),
         "place": pa.Column(str, nullable=True),
@@ -74,7 +73,6 @@ def run_validation_test():
     if len(errors) > 0:
         errors["test_record_id"] = test_df.loc[errors["index"].astype(int), "id"].values
         print(errors[["test_record_id", "column", "check", "failure_case"]])
-        errors.to_csv(TEST_ERRORS_FILE, index=False)
     print("Test records checked:", len(test_df))
     print("Test records detected as invalid:", len(bad_index))
 
