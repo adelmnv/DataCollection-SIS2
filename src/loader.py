@@ -6,29 +6,29 @@ from stats import save_stat
 
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS earthquakes (
-    id                  TEXT PRIMARY KEY,
-    time                TEXT NOT NULL,
-    mag                 REAL NOT NULL,
-    mag_type            TEXT,
-    place               TEXT,
-    region              TEXT,
-    depth_km            REAL NOT NULL,
-    latitude            REAL NOT NULL,
-    longitude           REAL NOT NULL,
-    sig                 INTEGER,
-    nst                 REAL,
-    gap                 REAL,
-    dmin                REAL,
-    rms                 REAL,
-    status              TEXT,
-    event_type          TEXT,
-    net                 TEXT,
-    alert               TEXT,
-    tsunami             INTEGER,
-    depth_category      TEXT,
-    mag_class           TEXT,
+    id TEXT PRIMARY KEY,
+    time TEXT NOT NULL,
+    mag REAL NOT NULL,
+    mag_type TEXT,
+    place TEXT,
+    region TEXT,
+    depth_km REAL NOT NULL,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    sig INTEGER,
+    nst REAL,
+    gap REAL,
+    dmin REAL,
+    rms REAL,
+    status TEXT,
+    event_type TEXT,
+    net TEXT,
+    alert TEXT,
+    tsunami INTEGER,
+    depth_category TEXT,
+    mag_class TEXT,
     energy_log10_joules REAL,
-    mag_zscore          REAL
+    mag_zscore REAL
 )
 """
 
@@ -108,9 +108,9 @@ def run_loader():
     print("\nChecksum after run 1:", checksum1)
     print("Checksum after run 2:", checksum2)
     if total1 == total2 and checksum1 == checksum2 and inserted2 == 0:
-        print("IDEMPOTENCY OK: second run added no rows and changed no values")
+        print("No duplicated records detected during second execution")
     else:
-        print("IDEMPOTENCY FAILED")
+        print("Duplicated records detected during second execution")
 
     print("\nProcessed records:", processed, "| Stored records:", total2)
 

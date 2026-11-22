@@ -107,7 +107,6 @@ def run_validator():
 
     save_stat("records_valid", len(valid_df))
     save_stat("records_invalid", len(invalid_df))
-
     run_validation_test()
 
     if len(valid_df) == 0:
