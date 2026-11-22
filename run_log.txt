@@ -1,0 +1,264 @@
+old output.db deleted
+
+>> [1/7] api_client.py - getting earthquakes from USGS
+Requesting data from USGS API...
+Collected records: 500
+Saved: /Users/nuray.alimzhankyzy/DataCollection-SIS2/data/raw_data.csv
+
+>> [2/7] producer.py - sending records to kafka
+/Users/nuray.alimzhankyzy/DataCollection-SIS2/src/producer.py:54: DeprecationWarning: value_serializer does not implement kafka.serializer.Serializer
+  run_producer()
+Messages published: 500
+Messages failed: 0
+
+>> [3/7] consumer.py - reading records from kafka
+Consumer started, waiting for messages...
+Consumed so far: 100
+Consumed so far: 200
+Consumed so far: 300
+Consumed so far: 400
+Consumed so far: 500
+Messages consumed: 500
+Bad messages: 0
+Saved: /Users/nuray.alimzhankyzy/DataCollection-SIS2/data/consumed_data.csv
+
+>> [4/7] validator.py - pandera checks
+Records received from Kafka: 500
+Valid records: 500
+Invalid records: 0
+No validation errors in the real data
+
+--- Validation test with 3 invalid test records ---
+         test_record_id  ... failure_case
+0  TEST_1_bad_magnitude  ...         15.0
+1   TEST_3_bad_category  ...    wrongtype
+2   TEST_2_bad_latitude  ...        120.0
+3   TEST_3_bad_category  ...      unknown
+
+[4 rows x 4 columns]
+Test records checked: 3
+Test records detected as invalid: 3
+
+>> [5/7] cleaner.py - cleaning + transformations
+Records after validation: 500
+
+Missing values before cleaning:
+alert    456
+dtype: int64
+Missing values after cleaning: 0
+Duplicates removed: 0
+
+Mean magnitude (NumPy): 4.837
+Std of magnitude (NumPy): 0.391
+
+Strong, shallow and reviewed earthquakes: 25
+Earthquakes with tsunami flag or orange/red alert: 5
+
+GroupBy magnitude type:
+  mag_type  events  mean_mag  max_mag  mean_depth
+0       mb     419      4.74      6.1       46.83
+1       ml       1      4.50      4.5        1.00
+2      mwr       4      4.53      4.6       31.66
+3      mww      76      5.39      7.0       49.57
+
+GroupBy region (top 10):
+             region  events  mean_mag  max_mag
+0           Vanuatu     183      4.89      6.8
+1             China      30      4.88      7.0
+2         Indonesia      26      4.84      5.7
+3       Philippines      21      4.83      5.8
+4             Japan      18      4.78      6.0
+5   Reykjanes Ridge      16      4.86      5.5
+6            Russia      15      4.85      6.9
+7  Papua New Guinea      12      4.98      5.7
+8      Japan Region      11      5.00      6.5
+9             Tonga      10      4.81      5.2
+
+Pivot table (depth category x magnitude class):
+mag_class       M5-5.9  M6-6.9  M7+  M<5
+depth_category                          
+deep                 3       3    0   13
+intermediate         8       3    0   49
+shallow            112       6    1  302
+
+Melt result (first rows):
+  depth_category mag_class  events
+0           deep    M5-5.9       3
+1   intermediate    M5-5.9       8
+2        shallow    M5-5.9     112
+3           deep    M6-6.9       3
+4   intermediate    M6-6.9       3
+
+Records after cleaning: 500
+Saved: /Users/nuray.alimzhankyzy/DataCollection-SIS2/data/clean_data.csv
+
+>> [6/7] loader.py - saving to sqlite (2 runs)
+Records to load: 500
+
+--- Load run 1 ---
+Inserted: 500 | Skipped: 0 | Rows in table: 500
+
+--- Load run 2 (same dataset) ---
+Inserted: 0 | Skipped: 500 | Rows in table: 500
+
+Checksum after run 1: (2418.4, 23517.143, 181741.0)
+Checksum after run 2: (2418.4, 23517.143, 181741.0)
+IDEMPOTENCY OK: second run added no rows and changed no values
+
+Processed records: 500 | Stored records: 500
+
+Query 1: number of rows
+SELECT COUNT(*) AS total_rows FROM earthquakes
+   total_rows
+0         500
+
+Query 2: unique ids
+SELECT COUNT(DISTINCT id) AS unique_ids FROM earthquakes
+   unique_ids
+0         500
+
+Query 3: top 5 strongest earthquakes
+SELECT id, time, mag, place FROM earthquakes ORDER BY mag DESC LIMIT 5
+           id                     time  mag                            place
+0  us6000u43g  2026-10-22 14:33:40.289  7.0       189 km ENE of Nagqu, China
+1  us6000u2mq  2026-10-16 03:35:32.092  6.9  72 km NE of Ozernovskiy, Russia
+2  us6000u4j2  2026-10-24 02:31:28.880  6.8  203 km NW of Port-Olry, Vanuatu
+3  us6000u4r9  2026-10-25 02:09:22.321  6.5      Bonin Islands, Japan region
+4  us7000ttxz  2026-10-29 07:49:50.096  6.4       southeast of Easter Island
+
+Query 4: count and average magnitude by magnitude type
+SELECT mag_type, COUNT(*) AS events, ROUND(AVG(mag), 2) AS avg_mag FROM earthquakes GROUP BY mag_type ORDER BY events DESC
+  mag_type  events  avg_mag
+0       mb     419     4.74
+1      mww      76     5.39
+2      mwr       4     4.53
+3       ml       1     4.50
+
+Query 5: events by depth category
+SELECT depth_category, COUNT(*) AS events, ROUND(AVG(depth_km), 1) AS avg_depth FROM earthquakes GROUP BY depth_category
+  depth_category  events  avg_depth
+0           deep      19      491.7
+1   intermediate      60      133.7
+2        shallow     421       14.6
+
+>> [7/7] analysis.py - EDA and plots
+Shape (rows, columns): (500, 24)
+
+Data types:
+id                                str
+time                   datetime64[us]
+mag                           float64
+mag_type                          str
+place                             str
+region                            str
+depth_km                      float64
+latitude                      float64
+longitude                     float64
+sig                             int64
+nst                           float64
+gap                           float64
+dmin                          float64
+rms                           float64
+status                            str
+event_type                        str
+net                               str
+alert                             str
+tsunami                         int64
+depth_category                    str
+mag_class                         str
+energy_log10_joules           float64
+mag_zscore                    float64
+date                           object
+dtype: object
+
+Descriptive statistics:
+          mag  depth_km      sig  ...    dmin     rms  energy_log10_joules
+count  500.00    500.00   500.00  ...  500.00  500.00               500.00
+mean     4.84     47.03   363.48  ...    5.54    0.75                12.06
+std      0.39     99.19    68.54  ...    4.25    0.21                 0.59
+min      4.50      1.00   312.00  ...    0.14    0.24                11.55
+25%      4.60     10.00   326.00  ...    2.39    0.60                11.70
+50%      4.70     10.00   340.00  ...    6.34    0.73                11.85
+75%      5.00     35.00   385.00  ...    6.75    0.89                12.30
+max      7.00    641.98  1007.00  ...   39.47    1.49                15.30
+
+[8 rows x 8 columns]
+
+Categorical statistics:
+mag_type
+mb     419
+mww     76
+mwr      4
+ml       1
+Name: count, dtype: int64
+status
+reviewed    500
+Name: count, dtype: int64
+depth_category
+shallow         421
+intermediate     60
+deep             19
+Name: count, dtype: int64
+mag_class
+M<5       364
+M5-5.9    123
+M6-6.9     12
+M7+         1
+Name: count, dtype: int64
+alert
+none      456
+green      42
+orange      1
+yellow      1
+Name: count, dtype: int64
+
+Correlation matrix:
+           mag  depth_km   sig   nst   gap   rms
+mag       1.00      0.02  0.98  0.57 -0.56 -0.02
+depth_km  0.02      1.00  0.02  0.14 -0.17 -0.02
+sig       0.98      0.02  1.00  0.55 -0.53 -0.01
+nst       0.57      0.14  0.55  1.00 -0.59 -0.21
+gap      -0.56     -0.17 -0.53 -0.59  1.00  0.15
+rms      -0.02     -0.02 -0.01 -0.21  0.15  1.00
+
+Mean values by depth category:
+                 mag     sig
+depth_category              
+deep            4.96  384.32
+intermediate    4.79  357.33
+shallow         4.84  363.42
+
+Top 10 regions by number of earthquakes:
+region
+Vanuatu             183
+China                30
+Indonesia            26
+Philippines          21
+Japan                18
+Reykjanes Ridge      16
+Russia               15
+Papua New Guinea     12
+Japan Region         11
+Panama               10
+Name: count, dtype: int64
+
+Day with most earthquakes: 2026-10-24 with 86 events
+Average earthquakes per day: 29.4
+
+Strongest earthquake: M 7.0 | 189 km ENE of Nagqu, China | 2026-10-22 14:33:40.289000
+
+Figures saved to: /Users/nuray.alimzhankyzy/DataCollection-SIS2/figures
+
+----- summary -----
+api records:         500
+sent to kafka:       500
+read from kafka:     500
+valid / invalid:     500 / 0
+test records caught: 3 of 3
+duplicates removed:  0
+after cleaning:      500
+in sqlite:           500
+added on 2nd load:   0
+
+all records went through kafka
+db has the same number of rows as clean_data.csv
