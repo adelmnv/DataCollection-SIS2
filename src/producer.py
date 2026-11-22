@@ -15,11 +15,9 @@ def run_producer():
     if not os.path.exists(RAW_CSV_FILE):
         print("Error: raw_data.csv not found, run api_client.py first")
         sys.exit(1)
-
     df = pd.read_csv(RAW_CSV_FILE)
     df = df.astype(object).where(df.notnull(), None)
     records = df.to_dict("records")
-
     try:
         producer = KafkaProducer(
             bootstrap_servers=KAFKA_SERVER,
@@ -32,10 +30,8 @@ def run_producer():
         print("Check that the container is running: docker ps")
         print("Details:", error)
         sys.exit(1)
-
     published = 0
     failed = 0
-
     for record in records:
         try:
             future = producer.send(KAFKA_TOPIC, value=record)
@@ -44,16 +40,12 @@ def run_producer():
         except KafkaError as error:
             failed += 1
             print("Failed to send record", record["id"], error)
-
     producer.flush()
     producer.close()
-
     print("Messages published:", published)
     print("Messages failed:", failed)
-
     save_stat("kafka_published", published)
     save_stat("kafka_failed", failed)
-
     if published == 0:
         sys.exit(1)
 
