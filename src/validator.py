@@ -14,7 +14,7 @@ ALERT_TYPES = ["green", "yellow", "orange", "red"]
 schema = pa.DataFrameSchema(
     {
         "id": pa.Column(str, nullable=False, unique=True),
-        "time": pa.Column(pa.DateTime, nullable=False, coerce=True, checks=pa.Check.in_range(pd.Timestamp("2000-01-01"), pd.Timestamp.now())),
+        "time": pa.Column(pa.DateTime, nullable=False, coerce=True, checks=pa.Check.in_range(pd.Timestamp("2026-10-01"), pd.Timestamp("2026-11-01"))),
         "mag": pa.Column(float, nullable=False, coerce=True, checks=pa.Check.in_range(-2, 10)),
         "magType": pa.Column(str, nullable=True, checks=pa.Check.isin(MAG_TYPES)),
         "place": pa.Column(str, nullable=True),
